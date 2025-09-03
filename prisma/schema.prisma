@@ -1,0 +1,217 @@
+generator client { 
+  provider = "prisma-client-js" 
+}
+
+datasource db { 
+  provider = "mysql"
+  url = env("DATABASE_URL") 
+}
+
+// User Management
+model User {
+  id               String   @id @default(cuid())
+  walletAddress    String   @unique
+  username         String?  @unique
+  email            String?  @unique
+  creditsBalance   Int      @default(0) // Cached balance
+  role             UserRole @default(USER)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  transactions     Transaction[]
+  unlockedChapters UserChapterUnlock[]
+  readingProgress  ReadingProgress[]
+
+  @@map("users")
+}
+
+enum UserRole { 
+  USER 
+  ADMIN 
+}
+
+// Authentication
+model SiweNonce {
+  id        String   @id @default(cuid())
+  address   String
+  nonce     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([address])
+  @@map("siwe_nonces")
+}
+
+// Comic Content Structure
+model Comic {
+  id           String      @id @default(cuid())
+  title        String
+  slug         String      @unique
+  description  String
+  author       String
+  coverImage   String
+  genre        String   // JSON string for MySQL compatibility
+  status       ComicStatus @default(ONGOING)
+  freeChapters Int         @default(3)
+  featured     Boolean     @default(false)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  volumes      Volume[]
+  tags         Tag[]
+
+  @@map("comics")
+}
+
+enum ComicStatus { 
+  ONGOING 
+  COMPLETED 
+  HIATUS 
+}
+
+model Volume {
+  id           String  @id @default(cuid())
+  comicId      String
+  volumeNumber Int
+  title        String
+  createdAt    DateTime @default(now())
+
+  comic     Comic   @relation(fields: [comicId], references: [id], onDelete: Cascade)
+  chapters  Chapter[]
+
+  @@unique([comicId, volumeNumber])
+  @@map("volumes")
+}
+
+model Chapter {
+  id             String   @id @default(cuid())
+  volumeId       String
+  chapterNumber  Float
+  title          String
+  unlockCost     Int      @default(5)
+  isFree         Boolean  @default(false)
+  publishedAt    DateTime @default(now())
+  createdAt      DateTime @default(now())
+
+  volume        Volume    @relation(fields: [volumeId], references: [id], onDelete: Cascade)
+  pages         Page[]
+  unlocks       UserChapterUnlock[]
+  readProgress  ReadingProgress[]
+
+  @@unique([volumeId, chapterNumber])
+  @@index([publishedAt])
+  @@map("chapters")
+}
+
+model Page {
+  id         String  @id @default(cuid())
+  chapterId  String
+  pageNumber Int
+  imageUrl   String
+  width      Int?
+  height     Int?
+  createdAt  DateTime @default(now())
+
+  chapter Chapter @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+
+  @@unique([chapterId, pageNumber])
+  @@map("pages")
+}
+
+// User Progress & Unlocks
+model UserChapterUnlock {
+  id           String   @id @default(cuid())
+  userId       String
+  chapterId    String
+  creditsSpent Int
+  unlockedAt   DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chapter Chapter @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, chapterId])
+  @@index([userId])
+  @@map("user_chapter_unlocks")
+}
+
+model ReadingProgress {
+  id         String   @id @default(cuid())
+  userId     String
+  chapterId  String
+  pageNumber Int
+  updatedAt  DateTime @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chapter Chapter @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, chapterId])
+  @@map("reading_progress")
+}
+
+// Financial System
+model Transaction {
+  id              String            @id @default(cuid())
+  userId          String
+  type            TransactionType
+  amount          Int               // Credits (+ = credit, - = debit)
+  description     String
+  transactionHash String?           @unique
+  networkChainId  Int?
+  status          TransactionStatus @default(PENDING)
+  createdAt       DateTime          @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([transactionHash])
+  @@map("transactions")
+}
+
+enum TransactionType { 
+  PURCHASE 
+  SPEND 
+  REFUND 
+  ADMIN_ADJUSTMENT 
+}
+
+enum TransactionStatus { 
+  PENDING 
+  CONFIRMED 
+  FAILED 
+}
+
+model CreditPackage {
+  id              String  @id @default(cuid())
+  name            String
+  credits         Int
+  priceUSD        Float
+  bonusPercentage Int     @default(0)
+  active          Boolean @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("credit_packages")
+}
+
+// Metadata
+model Tag {
+  id     String  @id @default(cuid())
+  name   String  @unique
+  comics Comic[]
+
+  @@map("tags")
+}
+
+// Site Configuration
+model Settings {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     Json
+  category  String   // 'general', 'seo', 'homepage', 'analytics', 'social', 'content'
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  updatedBy String?  // User ID who last updated
+
+  @@index([category])
+  @@map("settings")
+}
