@@ -4,21 +4,22 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { 
-  BookOpen, 
-  Users, 
-  BarChart3, 
-  Settings, 
-  Home,
-  CreditCard
+import {
+	BookOpen,
+	Users,
+	BarChart3,
+	Settings,
+	Home,
+	CreditCard, Settings2
 } from "lucide-react";
 
 const navigation = [
-  { name: "Overview", href: "/admin", icon: BarChart3 },
-  { name: "Comics", href: "/admin/comics", icon: BookOpen },
-  { name: "Users", href: "/admin/users", icon: Users },
-  { name: "Analytics", href: "/admin/analytics", icon: BarChart3 },
-  { name: "Settings", href: "/admin/settings", icon: Settings },
+	{ name: "Overview", href: "/admin", icon: BarChart3 },
+	{ name: "Comics", href: "/admin/comics", icon: BookOpen },
+	{ name: "Users", href: "/admin/users", icon: Users },
+	{ name: "Analytics", href: "/admin/analytics", icon: BarChart3 },
+	{ name: "Settings", href: "/admin/settings", icon: Settings },
+	{ name: "Footer", href: "/admin/footer", icon: Settings2 },
 ];
 
 export function AdminSidebar() {

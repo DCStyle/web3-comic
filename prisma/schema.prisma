@@ -215,3 +215,38 @@ model Settings {
   @@index([category])
   @@map("settings")
 }
+
+// Footer Configuration
+model FooterSettings {
+  id                String   @id @default(cuid())
+  
+  // Company Information
+  companyName       String   @default("SquareUi")
+  companyTagline    String   @default("The most Powerful Figma Ui Kit & Design System for designers.")
+  
+  // Newsletter
+  newsletterTitle   String   @default("Newsletter")
+  newsletterSubtitle String  @default("Receive product updates news, exclusive discounts and early access.")
+  newsletterEnabled Boolean  @default(true)
+  
+  // Social Media Links (JSON for flexibility)
+  socialLinks       Json     @default("[]") // Array of {name, url, icon}
+  
+  // Footer Links
+  companyLinks      Json     @default("[]") // Array of {name, url}
+  socialsTitle      String   @default("Socials")
+  
+  // Copyright
+  copyrightText     String   @default("© 2025 Web3Comic • All rights reserved • Made with Web3Comic")
+  showBuiltWith     Boolean  @default(true)
+  builtWithText     String   @default("Built in Framer")
+  
+  // Visibility
+  isActive          Boolean  @default(true)
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  updatedBy         String?  // User ID who last updated
+
+  @@map("footer_settings")
+}

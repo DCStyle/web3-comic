@@ -3,6 +3,7 @@ import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import { ConditionalHeader } from "@/components/layout/ConditionalHeader";
+import { ConditionalFooter } from "@/components/layout/ConditionalFooter";
 import { generateSiteMetadata } from "@/lib/metadata/generate";
 
 const inter = Inter({
@@ -32,6 +33,7 @@ export default function RootLayout({
         <Providers>
           <ConditionalHeader />
           {children}
+          <ConditionalFooter />
         </Providers>
       </body>
     </html>
